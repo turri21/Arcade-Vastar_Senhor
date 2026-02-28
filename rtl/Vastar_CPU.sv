@@ -300,7 +300,7 @@ reg [2:0] r_layer; // 0=fg, 1=bg0, 2=bg1
 
 // Which line we're rendering into buffers (next visible line)
 wire [8:0] rnext = v_cnt + 9'd1;
-wire [7:0] rline = rnext[7:0];
+wire [7:0] rline = 8'd239 - rnext[7:0];
 
 // Decode 2bpp pixel from byte pair
 function [1:0] pix2bpp;
@@ -369,19 +369,19 @@ always_ff @(posedge clk_49m) begin
 
 		//=== FG LAYER: read code, attr, color, then ROM bytes ===
 		S_FG_CODE: begin
-			fg_raddr <= {2'b10, rline[7:3], rx_col}; // code @ fgvram+0x800
+			fg_raddr <= 12'hC00 + {2'b00, rline[7:3], rx_col};
 			rstate <= S_FG_ATTR;
 		end
 		S_FG_ATTR: begin
 			r_tile_num[7:0] <= fg_vram_rD;
-			fg_raddr <= {2'b01, rline[7:3], rx_col}; // attr @ fgvram+0x400
+			fg_raddr <= 12'h800 + {2'b00, rline[7:3], rx_col};
 			rstate <= S_FG_COL;
 		end
 		S_FG_COL: begin
 			r_tile_num[9:8] <= fg_vram_rD[1:0];
 			r_flipy <= fg_vram_rD[2];
 			r_flipx <= fg_vram_rD[3];
-			fg_raddr <= {2'b00, rline[7:3], rx_col}; // color @ fgvram+0x000
+			fg_raddr <= 12'h400 + {2'b00, rline[7:3], rx_col};
 			rstate <= S_FG_ROMA;
 		end
 		S_FG_ROMA: begin
@@ -405,29 +405,30 @@ always_ff @(posedge clk_49m) begin
 		S_FG_DRAW: begin
 			begin
 				reg [7:0] ba, bb;
-				reg [1:0] px;
 				reg [1:0] pval;
 				ba = r_byte_a;
 				bb = fgtile_D;
-				for (integer i = 0; i < 8; i = i + 1) begin
-					if (r_flipx) begin
-						if (i < 4) begin
-							px = 2'd3 - i[1:0];
-							pval = {bb[px+4], bb[px]};
-						end else begin
-							px = 2'd3 - (i[1:0]);
-							pval = {ba[px+4], ba[px]};
-						end
-					end else begin
-						if (i < 4) begin
-							px = i[1:0];
-							pval = {ba[px+4], ba[px]};
-						end else begin
-							px = i[1:0];
-							pval = {bb[px+4], bb[px]};
-						end
-					end
-					fg_lb[rx + i] <= {r_color, pval};
+				// Left 4 pixels from ba, right 4 from bb
+				// Normal: px 0-3 from ba, 4-7 from bb
+				// FlipX:  px 0-3 from bb reversed, 4-7 from ba reversed
+				if (r_flipx) begin
+					fg_lb[rx+0] <= {r_color, bb[7], bb[3]};
+					fg_lb[rx+1] <= {r_color, bb[6], bb[2]};
+					fg_lb[rx+2] <= {r_color, bb[5], bb[1]};
+					fg_lb[rx+3] <= {r_color, bb[4], bb[0]};
+					fg_lb[rx+4] <= {r_color, ba[7], ba[3]};
+					fg_lb[rx+5] <= {r_color, ba[6], ba[2]};
+					fg_lb[rx+6] <= {r_color, ba[5], ba[1]};
+					fg_lb[rx+7] <= {r_color, ba[4], ba[0]};
+				end else begin
+					fg_lb[rx+0] <= {r_color, ba[4], ba[0]};
+					fg_lb[rx+1] <= {r_color, ba[5], ba[1]};
+					fg_lb[rx+2] <= {r_color, ba[6], ba[2]};
+					fg_lb[rx+3] <= {r_color, ba[7], ba[3]};
+					fg_lb[rx+4] <= {r_color, bb[4], bb[0]};
+					fg_lb[rx+5] <= {r_color, bb[5], bb[1]};
+					fg_lb[rx+6] <= {r_color, bb[6], bb[2]};
+					fg_lb[rx+7] <= {r_color, bb[7], bb[3]};
 				end
 			end
 			rx <= rx + 9'd8;
@@ -498,29 +499,26 @@ always_ff @(posedge clk_49m) begin
 		S_BG0_DRAW: begin
 			begin
 				reg [7:0] ba, bb;
-				reg [1:0] px;
-				reg [1:0] pval;
 				ba = r_byte_a;
 				bb = bgtile0_D;
-				for (integer i = 0; i < 8; i = i + 1) begin
-					if (r_flipx) begin
-						if (i < 4) begin
-							px = 2'd3 - i[1:0];
-							pval = {bb[px+4], bb[px]};
-						end else begin
-							px = 2'd3 - (i[1:0]);
-							pval = {ba[px+4], ba[px]};
-						end
-					end else begin
-						if (i < 4) begin
-							px = i[1:0];
-							pval = {ba[px+4], ba[px]};
-						end else begin
-							px = i[1:0];
-							pval = {bb[px+4], bb[px]};
-						end
-					end
-					bg0_lb[rx + i] <= {r_color, pval};
+				if (r_flipx) begin
+					bg0_lb[rx+0] <= {r_color, bb[7], bb[3]};
+					bg0_lb[rx+1] <= {r_color, bb[6], bb[2]};
+					bg0_lb[rx+2] <= {r_color, bb[5], bb[1]};
+					bg0_lb[rx+3] <= {r_color, bb[4], bb[0]};
+					bg0_lb[rx+4] <= {r_color, ba[7], ba[3]};
+					bg0_lb[rx+5] <= {r_color, ba[6], ba[2]};
+					bg0_lb[rx+6] <= {r_color, ba[5], ba[1]};
+					bg0_lb[rx+7] <= {r_color, ba[4], ba[0]};
+				end else begin
+					bg0_lb[rx+0] <= {r_color, ba[4], ba[0]};
+					bg0_lb[rx+1] <= {r_color, ba[5], ba[1]};
+					bg0_lb[rx+2] <= {r_color, ba[6], ba[2]};
+					bg0_lb[rx+3] <= {r_color, ba[7], ba[3]};
+					bg0_lb[rx+4] <= {r_color, bb[4], bb[0]};
+					bg0_lb[rx+5] <= {r_color, bb[5], bb[1]};
+					bg0_lb[rx+6] <= {r_color, bb[6], bb[2]};
+					bg0_lb[rx+7] <= {r_color, bb[7], bb[3]};
 				end
 			end
 			rx <= rx + 9'd8;
@@ -590,29 +588,26 @@ always_ff @(posedge clk_49m) begin
 		S_BG1_DRAW: begin
 			begin
 				reg [7:0] ba, bb;
-				reg [1:0] px;
-				reg [1:0] pval;
 				ba = r_byte_a;
 				bb = bgtile1_D;
-				for (integer i = 0; i < 8; i = i + 1) begin
-					if (r_flipx) begin
-						if (i < 4) begin
-							px = 2'd3 - i[1:0];
-							pval = {bb[px+4], bb[px]};
-						end else begin
-							px = 2'd3 - (i[1:0]);
-							pval = {ba[px+4], ba[px]};
-						end
-					end else begin
-						if (i < 4) begin
-							px = i[1:0];
-							pval = {ba[px+4], ba[px]};
-						end else begin
-							px = i[1:0];
-							pval = {bb[px+4], bb[px]};
-						end
-					end
-					bg1_lb[rx + i] <= {r_color, pval};
+				if (r_flipx) begin
+					bg1_lb[rx+0] <= {r_color, bb[7], bb[3]};
+					bg1_lb[rx+1] <= {r_color, bb[6], bb[2]};
+					bg1_lb[rx+2] <= {r_color, bb[5], bb[1]};
+					bg1_lb[rx+3] <= {r_color, bb[4], bb[0]};
+					bg1_lb[rx+4] <= {r_color, ba[7], ba[3]};
+					bg1_lb[rx+5] <= {r_color, ba[6], ba[2]};
+					bg1_lb[rx+6] <= {r_color, ba[5], ba[1]};
+					bg1_lb[rx+7] <= {r_color, ba[4], ba[0]};
+				end else begin
+					bg1_lb[rx+0] <= {r_color, ba[4], ba[0]};
+					bg1_lb[rx+1] <= {r_color, ba[5], ba[1]};
+					bg1_lb[rx+2] <= {r_color, ba[6], ba[2]};
+					bg1_lb[rx+3] <= {r_color, ba[7], ba[3]};
+					bg1_lb[rx+4] <= {r_color, bb[4], bb[0]};
+					bg1_lb[rx+5] <= {r_color, bb[5], bb[1]};
+					bg1_lb[rx+6] <= {r_color, bb[6], bb[2]};
+					bg1_lb[rx+7] <= {r_color, bb[7], bb[3]};
 				end
 			end
 			rx <= rx + 9'd8;
@@ -802,7 +797,7 @@ always_ff @(posedge clk_49m) begin
 end
 
 //--- Display compositing ---
-wire [7:0] disp_x = base_h_cnt[7:0];
+wire [7:0] disp_x = 8'd255 - base_h_cnt[7:0];
 wire [7:0] fg_pix  = fg_lb[disp_x];
 wire [7:0] bg0_pix = bg0_lb[disp_x];
 wire [7:0] bg1_pix = bg1_lb[disp_x];

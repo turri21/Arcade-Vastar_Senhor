@@ -304,12 +304,11 @@ wire [7:0] rline = rnext[7:0];
 
 // Decode 2bpp pixel from byte pair
 function [1:0] pix2bpp;
-	input [7:0] ba, bb;
-	input [2:0] x;
-	begin
-		if (x < 3'd4) pix2bpp = {ba[x+4], ba[x]};
-		else           pix2bpp = {bb[x-4+4], bb[x-4]};
-	end
+    input [7:0] byt;
+    input [1:0] x;
+    begin
+        pix2bpp = {byt[x+4], byt[x]};
+    end
 endfunction
 
 localparam S_IDLE     = 5'd0;
@@ -338,12 +337,25 @@ reg       spr_reading_b;
 // Tile index helpers
 wire [4:0] rx_col = rx[7:3];
 wire [2:0] rx_fine = rx[2:0];
+reg wait_cycle;
 
 always_ff @(posedge clk_49m) begin
 	if (!reset) begin
 		rstate <= S_IDLE;
 		rx <= 0;
+		wait_cycle <= 0;
+	end else if (rstate == S_IDLE) begin
+		wait_cycle <= 0;
+		if (cen_5m && base_h_cnt == 9'd256 && v_cnt >= 9'd15 && v_cnt < 9'd239) begin
+			rx <= 0;
+			rstate <= S_FG_CODE;
+		end
+	end else if (wait_cycle) begin
+		wait_cycle <= 0;
 	end else begin
+		if (rstate != S_FG_DRAW && rstate != S_BG0_DRAW && rstate != S_BG1_DRAW
+		    && rstate != S_SPR_INIT && rstate != S_DONE && rstate != S_SPR_RUN)
+			wait_cycle <= 1;
 		case (rstate)
 		S_IDLE: begin
 			// Start rendering at the beginning of hblank for each visible line
@@ -377,7 +389,7 @@ always_ff @(posedge clk_49m) begin
 			begin
 				reg [2:0] fy;
 				fy = r_flipy ? (3'd7 - rline[2:0]) : rline[2:0];
-				fgtile_addr <= {r_tile_num, fy}; // byte_a = tile*16 + fine_y (tile is 10 bits, fy is 3 = 13 bits)
+				fgtile_addr <= {r_tile_num[8:0], 1'b0, fy};
 			end
 			rstate <= S_FG_ROMB;
 		end
@@ -386,21 +398,35 @@ always_ff @(posedge clk_49m) begin
 			begin
 				reg [2:0] fy;
 				fy = r_flipy ? (3'd7 - rline[2:0]) : rline[2:0];
-				fgtile_addr <= {r_tile_num, fy} + 13'd8; // byte_b
+				fgtile_addr <= {r_tile_num[8:0], 1'b1, fy};
 			end
 			rstate <= S_FG_DRAW;
 		end
 		S_FG_DRAW: begin
-			// Write 8 pixels to fg_lb
 			begin
 				reg [7:0] ba, bb;
-				reg [2:0] px;
+				reg [1:0] px;
 				reg [1:0] pval;
 				ba = r_byte_a;
-				bb = fgtile_D; // byte_b ready now
+				bb = fgtile_D;
 				for (integer i = 0; i < 8; i = i + 1) begin
-					px = r_flipx ? (3'd7 - i[2:0]) : i[2:0];
-					pval = pix2bpp(ba, bb, px);
+					if (r_flipx) begin
+						if (i < 4) begin
+							px = 2'd3 - i[1:0];
+							pval = {bb[px+4], bb[px]};
+						end else begin
+							px = 2'd3 - (i[1:0]);
+							pval = {ba[px+4], ba[px]};
+						end
+					end else begin
+						if (i < 4) begin
+							px = i[1:0];
+							pval = {ba[px+4], ba[px]};
+						end else begin
+							px = i[1:0];
+							pval = {bb[px+4], bb[px]};
+						end
+					end
 					fg_lb[rx + i] <= {r_color, pval};
 				end
 			end
@@ -415,7 +441,7 @@ always_ff @(posedge clk_49m) begin
 		//=== BG0 LAYER: scroll, code, attr, color, ROM ===
 		S_BG0_SCR: begin
 			// Read scroll value from fgvram[0x3C0 + col]
-			fg_raddr <= 12'h3C0 + {7'd0, rx_col};
+			fg_raddr <= 12'h7C0 + {7'd0, rx_col};
 			rstate <= S_BG0_CODE;
 		end
 		S_BG0_CODE: begin
@@ -454,7 +480,7 @@ always_ff @(posedge clk_49m) begin
 				reg [2:0] fy;
 				sy = rline + r_scroll;
 				fy = r_flipy ? (3'd7 - sy[2:0]) : sy[2:0];
-				bgtile0_addr <= {r_tile_num, fy};
+				bgtile0_addr <= {r_tile_num[8:0], 1'b0, fy};
 			end
 			rstate <= S_BG0_ROMB;
 		end
@@ -465,20 +491,35 @@ always_ff @(posedge clk_49m) begin
 				reg [2:0] fy;
 				sy = rline + r_scroll;
 				fy = r_flipy ? (3'd7 - sy[2:0]) : sy[2:0];
-				bgtile0_addr <= {r_tile_num, fy} + 13'd8;
+				bgtile0_addr <= {r_tile_num[8:0], 1'b1, fy};
 			end
 			rstate <= S_BG0_DRAW;
 		end
 		S_BG0_DRAW: begin
 			begin
 				reg [7:0] ba, bb;
-				reg [2:0] px;
+				reg [1:0] px;
 				reg [1:0] pval;
 				ba = r_byte_a;
 				bb = bgtile0_D;
 				for (integer i = 0; i < 8; i = i + 1) begin
-					px = r_flipx ? (3'd7 - i[2:0]) : i[2:0];
-					pval = pix2bpp(ba, bb, px);
+					if (r_flipx) begin
+						if (i < 4) begin
+							px = 2'd3 - i[1:0];
+							pval = {bb[px+4], bb[px]};
+						end else begin
+							px = 2'd3 - (i[1:0]);
+							pval = {ba[px+4], ba[px]};
+						end
+					end else begin
+						if (i < 4) begin
+							px = i[1:0];
+							pval = {ba[px+4], ba[px]};
+						end else begin
+							px = i[1:0];
+							pval = {bb[px+4], bb[px]};
+						end
+					end
 					bg0_lb[rx + i] <= {r_color, pval};
 				end
 			end
@@ -492,7 +533,7 @@ always_ff @(posedge clk_49m) begin
 
 		//=== BG1 LAYER: same pattern as BG0 but uses bg1_vram and bgtile1_rom ===
 		S_BG1_SCR: begin
-			fg_raddr <= 12'h3E0 + {7'd0, rx_col};
+			fg_raddr <= 12'h7E0 + {7'd0, rx_col};
 			rstate <= S_BG1_CODE;
 		end
 		S_BG1_CODE: begin
@@ -531,7 +572,7 @@ always_ff @(posedge clk_49m) begin
 				reg [2:0] fy;
 				sy = rline + r_scroll;
 				fy = r_flipy ? (3'd7 - sy[2:0]) : sy[2:0];
-				bgtile1_addr <= {r_tile_num, fy};
+				bgtile1_addr <= {r_tile_num[8:0], 1'b0, fy};
 			end
 			rstate <= S_BG1_ROMB;
 		end
@@ -542,20 +583,35 @@ always_ff @(posedge clk_49m) begin
 				reg [2:0] fy;
 				sy = rline + r_scroll;
 				fy = r_flipy ? (3'd7 - sy[2:0]) : sy[2:0];
-				bgtile1_addr <= {r_tile_num, fy} + 13'd8;
+				bgtile1_addr <= {r_tile_num[8:0], 1'b1, fy};
 			end
 			rstate <= S_BG1_DRAW;
 		end
 		S_BG1_DRAW: begin
 			begin
 				reg [7:0] ba, bb;
-				reg [2:0] px;
+				reg [1:0] px;
 				reg [1:0] pval;
 				ba = r_byte_a;
 				bb = bgtile1_D;
 				for (integer i = 0; i < 8; i = i + 1) begin
-					px = r_flipx ? (3'd7 - i[2:0]) : i[2:0];
-					pval = pix2bpp(ba, bb, px);
+					if (r_flipx) begin
+						if (i < 4) begin
+							px = 2'd3 - i[1:0];
+							pval = {bb[px+4], bb[px]};
+						end else begin
+							px = 2'd3 - (i[1:0]);
+							pval = {ba[px+4], ba[px]};
+						end
+					end else begin
+						if (i < 4) begin
+							px = i[1:0];
+							pval = {ba[px+4], ba[px]};
+						end else begin
+							px = i[1:0];
+							pval = {bb[px+4], bb[px]};
+						end
+					end
 					bg1_lb[rx + i] <= {r_color, pval};
 				end
 			end

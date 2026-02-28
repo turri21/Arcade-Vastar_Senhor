@@ -412,23 +412,23 @@ always_ff @(posedge clk_49m) begin
 				// Normal: px 0-3 from ba, 4-7 from bb
 				// FlipX:  px 0-3 from bb reversed, 4-7 from ba reversed
 				if (r_flipx) begin
-					fg_lb[rx+0] <= {r_color, bb[7], bb[3]};
-					fg_lb[rx+1] <= {r_color, bb[6], bb[2]};
-					fg_lb[rx+2] <= {r_color, bb[5], bb[1]};
-					fg_lb[rx+3] <= {r_color, bb[4], bb[0]};
-					fg_lb[rx+4] <= {r_color, ba[7], ba[3]};
-					fg_lb[rx+5] <= {r_color, ba[6], ba[2]};
-					fg_lb[rx+6] <= {r_color, ba[5], ba[1]};
-					fg_lb[rx+7] <= {r_color, ba[4], ba[0]};
+					fg_lb[rx+7] <= {r_color, ba[7], ba[3]};
+					fg_lb[rx+6] <= {r_color, ba[6], ba[2]};
+					fg_lb[rx+5] <= {r_color, ba[5], ba[1]};
+					fg_lb[rx+4] <= {r_color, ba[4], ba[0]};
+					fg_lb[rx+3] <= {r_color, bb[7], bb[3]};
+					fg_lb[rx+2] <= {r_color, bb[6], bb[2]};
+					fg_lb[rx+1] <= {r_color, bb[5], bb[1]};
+					fg_lb[rx+0] <= {r_color, bb[4], bb[0]};
 				end else begin
-					fg_lb[rx+0] <= {r_color, ba[4], ba[0]};
-					fg_lb[rx+1] <= {r_color, ba[5], ba[1]};
-					fg_lb[rx+2] <= {r_color, ba[6], ba[2]};
-					fg_lb[rx+3] <= {r_color, ba[7], ba[3]};
-					fg_lb[rx+4] <= {r_color, bb[4], bb[0]};
-					fg_lb[rx+5] <= {r_color, bb[5], bb[1]};
-					fg_lb[rx+6] <= {r_color, bb[6], bb[2]};
-					fg_lb[rx+7] <= {r_color, bb[7], bb[3]};
+					fg_lb[rx+7] <= {r_color, bb[4], bb[0]};
+					fg_lb[rx+6] <= {r_color, bb[5], bb[1]};
+					fg_lb[rx+5] <= {r_color, bb[6], bb[2]};
+					fg_lb[rx+4] <= {r_color, bb[7], bb[3]};
+					fg_lb[rx+3] <= {r_color, ba[4], ba[0]};
+					fg_lb[rx+2] <= {r_color, ba[5], ba[1]};
+					fg_lb[rx+1] <= {r_color, ba[6], ba[2]};
+					fg_lb[rx+0] <= {r_color, ba[7], ba[3]};
 				end
 			end
 			rx <= rx + 9'd8;
@@ -502,23 +502,23 @@ always_ff @(posedge clk_49m) begin
 				ba = r_byte_a;
 				bb = bgtile0_D;
 				if (r_flipx) begin
-					bg0_lb[rx+0] <= {r_color, bb[7], bb[3]};
-					bg0_lb[rx+1] <= {r_color, bb[6], bb[2]};
-					bg0_lb[rx+2] <= {r_color, bb[5], bb[1]};
-					bg0_lb[rx+3] <= {r_color, bb[4], bb[0]};
-					bg0_lb[rx+4] <= {r_color, ba[7], ba[3]};
-					bg0_lb[rx+5] <= {r_color, ba[6], ba[2]};
-					bg0_lb[rx+6] <= {r_color, ba[5], ba[1]};
-					bg0_lb[rx+7] <= {r_color, ba[4], ba[0]};
+					bg0_lb[rx+7] <= {r_color, ba[7], ba[3]};
+					bg0_lb[rx+6] <= {r_color, ba[6], ba[2]};
+					bg0_lb[rx+5] <= {r_color, ba[5], ba[1]};
+					bg0_lb[rx+4] <= {r_color, ba[4], ba[0]};
+					bg0_lb[rx+3] <= {r_color, bb[7], bb[3]};
+					bg0_lb[rx+2] <= {r_color, bb[6], bb[2]};
+					bg0_lb[rx+1] <= {r_color, bb[5], bb[1]};
+					bg0_lb[rx+0] <= {r_color, bb[4], bb[0]};
 				end else begin
-					bg0_lb[rx+0] <= {r_color, ba[4], ba[0]};
-					bg0_lb[rx+1] <= {r_color, ba[5], ba[1]};
-					bg0_lb[rx+2] <= {r_color, ba[6], ba[2]};
-					bg0_lb[rx+3] <= {r_color, ba[7], ba[3]};
-					bg0_lb[rx+4] <= {r_color, bb[4], bb[0]};
-					bg0_lb[rx+5] <= {r_color, bb[5], bb[1]};
-					bg0_lb[rx+6] <= {r_color, bb[6], bb[2]};
-					bg0_lb[rx+7] <= {r_color, bb[7], bb[3]};
+					bg0_lb[rx+7] <= {r_color, bb[4], bb[0]};
+					bg0_lb[rx+6] <= {r_color, bb[5], bb[1]};
+					bg0_lb[rx+5] <= {r_color, bb[6], bb[2]};
+					bg0_lb[rx+4] <= {r_color, bb[7], bb[3]};
+					bg0_lb[rx+3] <= {r_color, ba[4], ba[0]};
+					bg0_lb[rx+2] <= {r_color, ba[5], ba[1]};
+					bg0_lb[rx+1] <= {r_color, ba[6], ba[2]};
+					bg0_lb[rx+0] <= {r_color, ba[7], ba[3]};
 				end
 			end
 			rx <= rx + 9'd8;
@@ -591,23 +591,23 @@ always_ff @(posedge clk_49m) begin
 				ba = r_byte_a;
 				bb = bgtile1_D;
 				if (r_flipx) begin
-					bg1_lb[rx+0] <= {r_color, bb[7], bb[3]};
-					bg1_lb[rx+1] <= {r_color, bb[6], bb[2]};
-					bg1_lb[rx+2] <= {r_color, bb[5], bb[1]};
-					bg1_lb[rx+3] <= {r_color, bb[4], bb[0]};
-					bg1_lb[rx+4] <= {r_color, ba[7], ba[3]};
-					bg1_lb[rx+5] <= {r_color, ba[6], ba[2]};
-					bg1_lb[rx+6] <= {r_color, ba[5], ba[1]};
-					bg1_lb[rx+7] <= {r_color, ba[4], ba[0]};
+					bg1_lb[rx+7] <= {r_color, ba[7], ba[3]};
+					bg1_lb[rx+6] <= {r_color, ba[6], ba[2]};
+					bg1_lb[rx+5] <= {r_color, ba[5], ba[1]};
+					bg1_lb[rx+4] <= {r_color, ba[4], ba[0]};
+					bg1_lb[rx+3] <= {r_color, bb[7], bb[3]};
+					bg1_lb[rx+2] <= {r_color, bb[6], bb[2]};
+					bg1_lb[rx+1] <= {r_color, bb[5], bb[1]};
+					bg1_lb[rx+0] <= {r_color, bb[4], bb[0]};
 				end else begin
-					bg1_lb[rx+0] <= {r_color, ba[4], ba[0]};
-					bg1_lb[rx+1] <= {r_color, ba[5], ba[1]};
-					bg1_lb[rx+2] <= {r_color, ba[6], ba[2]};
-					bg1_lb[rx+3] <= {r_color, ba[7], ba[3]};
-					bg1_lb[rx+4] <= {r_color, bb[4], bb[0]};
-					bg1_lb[rx+5] <= {r_color, bb[5], bb[1]};
-					bg1_lb[rx+6] <= {r_color, bb[6], bb[2]};
-					bg1_lb[rx+7] <= {r_color, bb[7], bb[3]};
+					bg1_lb[rx+7] <= {r_color, bb[4], bb[0]};
+					bg1_lb[rx+6] <= {r_color, bb[5], bb[1]};
+					bg1_lb[rx+5] <= {r_color, bb[6], bb[2]};
+					bg1_lb[rx+4] <= {r_color, bb[7], bb[3]};
+					bg1_lb[rx+3] <= {r_color, ba[4], ba[0]};
+					bg1_lb[rx+2] <= {r_color, ba[5], ba[1]};
+					bg1_lb[rx+1] <= {r_color, ba[6], ba[2]};
+					bg1_lb[rx+0] <= {r_color, ba[7], ba[3]};
 				end
 			end
 			rx <= rx + 9'd8;

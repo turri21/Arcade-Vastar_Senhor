@@ -349,7 +349,6 @@ always_ff @(posedge clk_49m) begin
 		if (cen_5m && base_h_cnt == 9'd256 && v_cnt >= 9'd15 && v_cnt < 9'd239) begin
 			rx <= 0;
 			rstate <= S_FG_CODE;
-			// Pre-clear sprite buffer for new line
 			for (integer i = 0; i < 256; i = i + 1) spr_lb[i] <= 8'd0;
 		end
 	end else if (wait_cycle) begin
@@ -360,7 +359,13 @@ always_ff @(posedge clk_49m) begin
 			wait_cycle <= 1;
 		case (rstate)
 		S_IDLE: begin
-			// Handled by outer else-if branch above; this arm is unreachable.
+			// Start rendering at the beginning of hblank for each visible line
+			if (cen_5m && base_h_cnt == 9'd256 && v_cnt >= 9'd15 && v_cnt < 9'd239) begin
+				rx <= 0;
+				rstate <= S_FG_CODE;
+				// Clear sprite buffer
+				// (cleared inline during S_SPR_INIT)
+			end
 		end
 
 		//=== FG LAYER: read code, attr, color, then ROM bytes ===

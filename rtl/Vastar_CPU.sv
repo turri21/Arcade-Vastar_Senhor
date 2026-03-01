@@ -204,9 +204,9 @@ dpram_dc #(.widthad_a(11)) shared_ram (
 wire [7:0] cpu1_Din = cs_rom ? main_rom_D : cs_bg1 ? bg1_vram_D : cs_bg0 ? bg0_vram_D :
                       cs_fgvram ? fg_vram_D : cs_shared ? shared_ram_D_cpu1 : 8'hFF;
 
-wire [7:0] p1_inputs     = ~p1_controls;
-wire [7:0] p2_inputs     = ~p2_controls;
-wire [7:0] system_inputs = ~sys_controls;
+wire [7:0] p1_inputs     = p1_controls;
+wire [7:0] p2_inputs     = p2_controls;
+wire [7:0] system_inputs = sys_controls;
 
 //---------------------------------------------------- AY-3-8910 --------------------------------------------------------------//
 
@@ -734,11 +734,11 @@ always_ff @(posedge clk_49m) begin
 			5'd7: begin
 				// Set sprite ROM address for current row, left half (byte_a)
 				// 16x16 sprite layout (64 bytes/sprite):
-				// row 0-7:  base + row                (byte_a for cols 0-3)
-				//           base + row + 8             (byte_b for cols 0-3)  -- actually cols 4-7
+				// row 0-7:  base + row                 (byte_a for cols 0-3)
+				//           base + row + 8             (byte_b for cols 4-7)
 				//           base + row + 16            (cols 8-11)
 				//           base + row + 24            (cols 12-15)
-				// row 8-15: base + 32 + (row-8)       etc.
+				// row 8-15: base + 32 + (row-8)        etc.
 				// For double height: code/2, 128 bytes
 				begin
 					reg [13:0] base;

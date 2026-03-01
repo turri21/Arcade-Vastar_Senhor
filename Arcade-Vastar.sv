@@ -378,18 +378,18 @@ end
 //////////////////  Arcade Buttons/Interfaces   ///////////////////////////
 
 //Player 1
-wire m_up1      = btn_up      | joystick_0[3];
-wire m_down1    = btn_down    | joystick_0[2];
-wire m_left1    = btn_left    | joystick_0[1];
-wire m_right1   = btn_right   | joystick_0[0];
+wire m_up1      = btn_up      | joystick_0[1];
+wire m_down1    = btn_down    | joystick_0[0];
+wire m_left1    = btn_left    | joystick_0[3];
+wire m_right1   = btn_right   | joystick_0[2];
 wire m_fire1    = btn_fire    | joystick_0[4];
 wire m_fire1b   = btn_fire2   | joystick_0[5];
 
 //Player 2
-wire m_up2      = btn_up      | joystick_1[3];
-wire m_down2    = btn_down    | joystick_1[2];
-wire m_left2    = btn_left    | joystick_1[1];
-wire m_right2   = btn_right   | joystick_1[0];
+wire m_up2      = btn_up      | joystick_1[1];
+wire m_down2    = btn_down    | joystick_1[0];
+wire m_left2    = btn_left    | joystick_1[3];
+wire m_right2   = btn_right   | joystick_1[2];
 wire m_fire2    = btn_fire    | joystick_1[4];
 wire m_fire2b   = btn_fire2   | joystick_0[5];
 

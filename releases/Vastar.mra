@@ -69,7 +69,17 @@
 		<!-- Unknown PROM 256B (0x14300-0x143FF) -->
 		<part crc="b5297a3b" name="tbp24s10.8n"/>
 	</rom>
+	<rom index="1"></rom>
+	<rom index="2"></rom>
+	<rom index="3" md5="none">
+		<part>
+		01 FF FF FF 00 FF 00 02 00 02 00 01 00 FF 00 00
+		00 00 27 F1 00 86 00 16
+		</part>
+	</rom>
+	<rom index="4"></rom>
+	<nvram index="4" size="134"></nvram>
 
-	<remark></remark>
+	<remark>F127-F1AC</remark>
 	<mratimestamp>20260224000000</mratimestamp>
 </misterromdescription>

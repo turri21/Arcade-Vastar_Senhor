@@ -241,15 +241,20 @@ wire [7:0] fgtile_D;
 eprom_8k fgtile_rom (.CLK(clk_49m), .ADDR(fgtile_addr), .CLK_DL(clk_49m),
 	.ADDR_DL(ioctl_addr), .DATA_IN(ioctl_data), .CS_DL(fgtile_cs_i), .WR(ioctl_wr), .DATA(fgtile_D));
 
+// BG tile ROMs — named by the layer they serve
+// Note: bg0_tilerom loads from bgtiles1 ROM region (CS_DL=bgtile1_cs_i)
+//       bg1_tilerom loads from bgtiles0 ROM region (CS_DL=bgtile0_cs_i)
+// This cross-mapping matches MAME's "4 - Which" gfx assignment.
+
 reg [12:0] bgtile0_addr;
 wire [7:0] bgtile0_D;
 eprom_8k bgtile_rom0 (.CLK(clk_49m), .ADDR(bgtile0_addr), .CLK_DL(clk_49m),
-	.ADDR_DL(ioctl_addr), .DATA_IN(ioctl_data), .CS_DL(bgtile0_cs_i), .WR(ioctl_wr), .DATA(bgtile0_D));
+	.ADDR_DL(ioctl_addr), .DATA_IN(ioctl_data), .CS_DL(bgtile1_cs_i), .WR(ioctl_wr), .DATA(bgtile0_D));
 
 reg [12:0] bgtile1_addr;
 wire [7:0] bgtile1_D;
 eprom_8k bgtile_rom1 (.CLK(clk_49m), .ADDR(bgtile1_addr), .CLK_DL(clk_49m),
-	.ADDR_DL(ioctl_addr), .DATA_IN(ioctl_data), .CS_DL(bgtile1_cs_i), .WR(ioctl_wr), .DATA(bgtile1_D));
+	.ADDR_DL(ioctl_addr), .DATA_IN(ioctl_data), .CS_DL(bgtile0_cs_i), .WR(ioctl_wr), .DATA(bgtile1_D));
 
 reg [12:0] sprite_addr;
 wire [7:0] sprite0_D, sprite1_D;
@@ -325,9 +330,10 @@ localparam S_DONE     = 5'd23;
 reg [4:0] spr_state;
 reg [3:0] spr_idx;   // sprite index 0-15
 reg [7:0] spr_y, spr_x, spr_code_raw, spr_attr_raw, spr_color_raw;
-reg [6:0] spr_code;
+reg [7:0] spr_code;
 reg [5:0] spr_color;
 reg       spr_flipx, spr_flipy, spr_dbl;
+reg [4:0] spr_next_state;
 reg [4:0] spr_row;
 reg [3:0] spr_col;
 reg [7:0] spr_byte_a, spr_byte_b;
@@ -639,58 +645,63 @@ always_ff @(posedge clk_49m) begin
 				// Read Y: fgvram[rambase + (idx&7)*2]
 				begin
 					reg [11:0] rambase;
-					rambase = (spr_idx < 8) ? 12'h030 : 12'h010;
+					rambase = (spr_idx < 8) ? 12'h430 : 12'h410;
 					fg_raddr <= rambase + {8'd0, spr_idx[2:0], 1'b0};
 				end
-				spr_state <= 1;
+			    spr_next_state <= 1;
+			    spr_state <= 11;
 			end
 			5'd1: begin
 				spr_y <= fg_vram_rD;
 				// Read Color: fgvram[rambase + (idx&7)*2 + 1]
 				begin
 					reg [11:0] rambase;
-					rambase = (spr_idx < 8) ? 12'h030 : 12'h010;
+					rambase = (spr_idx < 8) ? 12'h430 : 12'h410;
 					fg_raddr <= rambase + {8'd0, spr_idx[2:0], 1'b1};
 				end
-				spr_state <= 2;
+				spr_next_state <= 2;
+				spr_state <= 11;
 			end
 			5'd2: begin
 				spr_color <= fg_vram_rD[5:0];
 				// Read Attr: fgvram[rambase + 0x400 + (idx&7)*2]
 				begin
 					reg [11:0] rambase;
-					rambase = (spr_idx < 8) ? 12'h030 : 12'h010;
+					rambase = (spr_idx < 8) ? 12'h430 : 12'h410;
 					fg_raddr <= rambase + 12'h400 + {8'd0, spr_idx[2:0], 1'b0};
 				end
-				spr_state <= 3;
+				spr_next_state <= 3;
+				spr_state <= 11;
 			end
 			5'd3: begin
 				spr_attr_raw <= fg_vram_rD;
 				// Read Code/X byte 0: fgvram[rambase + 0x800 + (idx&7)*2]
 				begin
 					reg [11:0] rambase;
-					rambase = (spr_idx < 8) ? 12'h030 : 12'h010;
+					rambase = (spr_idx < 8) ? 12'h430 : 12'h410;
 					fg_raddr <= rambase + 12'h800 + {8'd0, spr_idx[2:0], 1'b0};
 				end
-				spr_state <= 4;
+				spr_next_state <= 4;
+				spr_state <= 11;
 			end
 			5'd4: begin
 				spr_code_raw <= fg_vram_rD;
 				// Read X position: fgvram[rambase + 0x800 + (idx&7)*2 + 1]
 				begin
 					reg [11:0] rambase;
-					rambase = (spr_idx < 8) ? 12'h030 : 12'h010;
+					rambase = (spr_idx < 8) ? 12'h430 : 12'h410;
 					fg_raddr <= rambase + 12'h800 + {8'd0, spr_idx[2:0], 1'b1};
 				end
-				spr_state <= 5;
+				spr_next_state <= 5;
+				spr_state <= 11;
 			end
 			5'd5: begin
 				spr_x <= fg_vram_rD;
 				// Decode sprite
 				begin
-					reg [6:0] code;
-					reg [6:0] tilebase;
-					tilebase = (spr_idx < 8) ? 7'd64 : 7'd0; // 0x80/2=64 for bank0, 0 for bank1
+					reg [7:0] code;
+					reg [7:0] tilebase;
+					tilebase = (spr_idx < 8) ? 8'd128 : 8'd0; // 0x80/2=64 for bank0, 0 for bank1
 					code = {spr_attr_raw[0], spr_code_raw[7:2]} + tilebase;
 					spr_code <= code;
 					spr_flipy <= spr_code_raw[0];
@@ -730,12 +741,12 @@ always_ff @(posedge clk_49m) begin
 				// row 8-15: base + 32 + (row-8)       etc.
 				// For double height: code/2, 128 bytes
 				begin
-					reg [12:0] base;
+					reg [13:0] base;
 					reg [4:0] erow;
 					reg [3:0] quarter;
 					erow = spr_flipy ? ((spr_dbl ? 5'd31 : 5'd15) - spr_row) : spr_row;
 					if (spr_dbl)
-						base = {spr_code[6:1], 7'd0}; // code/2 * 128
+						base = {spr_code[7:1], 7'd0}; // code/2 * 128
 					else
 						base = {spr_code, 6'd0}; // code * 64
 					quarter = spr_col[3:2]; // which quarter (0-3)
@@ -744,18 +755,18 @@ always_ff @(posedge clk_49m) begin
 					// For 32 tall: (erow < 8) ? erow : (erow < 16) ? 32+(erow-8) : (erow < 24) ? 64+(erow-16) : 96+(erow-24)
 					begin
 						reg [6:0] row_base;
+						reg [13:0] full_addr;
 						if (spr_dbl) begin
-							row_base = {erow[4:3], erow[2:0]}; // erow[4:3] * 32 + erow[2:0]
-							row_base = {erow[4:3], 2'b00, erow[2:0]}; // erow/8*32 + erow%8
+							row_base = {erow[4:3], 2'b00, erow[2:0]};
 						end else begin
-							row_base = erow[3] ? ({1'b1, 1'b0, 1'b0, 1'b0, 1'b0, erow[2:0]}) : {4'd0, erow[2:0]};
 							row_base = erow[3] ? (7'd32 + {4'd0, erow[2:0]}) : {4'd0, erow[2:0]};
 						end
-						sprite_addr <= base + {6'd0, row_base} + {9'd0, quarter, 3'b000};
-						spr_rom_half <= base[12]; // which 8K ROM to use
+						full_addr = base + {7'd0, row_base} + {10'd0, quarter, 3'b000};
+						sprite_addr <= full_addr[12:0];
+						spr_rom_half <= full_addr[13];
 					end
 				end
-				spr_state <= 8;
+				spr_state <= 10;
 			end
 			5'd8: begin
 				// ROM data ready — latch
@@ -783,6 +794,12 @@ always_ff @(posedge clk_49m) begin
 					// Every 4 pixels, need new ROM fetch
 					if (spr_col[1:0] == 2'd3) spr_state <= 7;
 				end
+			end
+			5'd10: begin
+				spr_state <= 8;   // ROM data now valid
+			end
+			5'd11: begin
+				spr_state <= spr_next_state;
 			end
 			default: spr_state <= 0;
 			endcase

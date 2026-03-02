@@ -357,7 +357,7 @@ always_ff @(posedge clk_49m) begin
 	end else if (rstate == S_IDLE) begin
 		wait_cycle <= 0;
 //		if (cen_5m && base_h_cnt == 9'd256 && v_cnt >= 9'd15 && v_cnt < 9'd239) begin
-		if (cen_5m && base_h_cnt == 9'd224 && v_cnt >= 9'd15 && v_cnt < 9'd239) begin
+		if (cen_5m && base_h_cnt == 9'd230 && v_cnt >= 9'd15 && v_cnt < 9'd239) begin
 			rx <= 0;
 			rstate <= S_FG_CODE;
 			for (integer i = 0; i < 256; i = i + 1) spr_lb[i] <= 8'd0;
@@ -371,7 +371,7 @@ always_ff @(posedge clk_49m) begin
 		case (rstate)
 		S_IDLE: begin
 			// Start rendering at the beginning of hblank for each visible line
-			if (cen_5m && base_h_cnt == 9'd256 && v_cnt >= 9'd15 && v_cnt < 9'd239) begin
+			if (cen_5m && base_h_cnt == 9'd230 && v_cnt >= 9'd15 && v_cnt < 9'd239) begin
 				rx <= 0;
 				rstate <= S_FG_CODE;
 				// Clear sprite buffer

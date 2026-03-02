@@ -1,5 +1,5 @@
 <misterromdescription>
-	<n>Vastar</n>
+	<n>Vastar (Set 3)</n>
 	<region>World</region>
 	<homebrew>no</homebrew>
 	<bootleg>no</bootleg>
@@ -40,19 +40,15 @@
 	</switches>
 
 	<!-- Index 0: All CPU + GFX ROMs -->
-	<rom index="0" md5="none" zip="vastar.zip">
+	<rom index="0" md5="none" zip="vastar.zip|vastar3.zip">
 		<!-- Main CPU ROMs 8x 4KB = 32KB (0x00000-0x07FFF) -->
-		<part crc="45fa5075" name="e_f4.rom"/>
-		<part crc="84531982" name="e_k4.rom"/>
-		<part crc="94a4f778" name="e_h4.rom"/>
-		<part crc="40e4d57b" name="e_l4.rom"/>
-		<part crc="bd607651" name="e_j4.rom"/>
-		<part crc="7a3779a4" name="e_n4.rom"/>
-		<part crc="31b6be39" name="e_n7.rom"/>
-		<part crc="f63f0e78" name="e_n5.rom"/>
+		<part crc="ad4e512a" name="vst_2.4f"/>
+		<part crc="2276c5d0" name="vst_3.4h"/>
+		<part crc="deca2aa1" name="vst_4.4j"/>
+		<part crc="743ed1c7" name="vst_5.6n"/>
 		<!-- Sub CPU ROMs 2x 4KB = 8KB (0x08000-0x09FFF) -->
-		<part crc="713478d8" name="e_f2.rom"/>
-		<part crc="e4535442" name="e_j2.rom"/>
+		<part crc="713478d8" name="vst_0.2f"/>
+		<part crc="e4535442" name="vst_1.2j"/>
 		<!-- FG tiles 8KB (0x0A000-0x0BFFF) -->
 		<part crc="34f067b6" name="c_c9.rom"/>
 		<!-- Sprites 2x 8KB = 16KB (0x0C000-0x0FFFF) -->

@@ -1,5 +1,5 @@
 <misterromdescription>
-	<n>Vastar</n>
+	<n>Vastar (Set 2)</n>
 	<region>World</region>
 	<homebrew>no</homebrew>
 	<bootleg>no</bootleg>
@@ -40,16 +40,16 @@
 	</switches>
 
 	<!-- Index 0: All CPU + GFX ROMs -->
-	<rom index="0" md5="none" zip="vastar.zip">
+	<rom index="0" md5="none" zip="vastar.zip|vastar2.zip">
 		<!-- Main CPU ROMs 8x 4KB = 32KB (0x00000-0x07FFF) -->
-		<part crc="45fa5075" name="e_f4.rom"/>
-		<part crc="84531982" name="e_k4.rom"/>
-		<part crc="94a4f778" name="e_h4.rom"/>
-		<part crc="40e4d57b" name="e_l4.rom"/>
-		<part crc="bd607651" name="e_j4.rom"/>
-		<part crc="7a3779a4" name="e_n4.rom"/>
-		<part crc="31b6be39" name="e_n7.rom"/>
-		<part crc="f63f0e78" name="e_n5.rom"/>
+		<part crc="6741ff9c" name="3.4f"/>
+		<part crc="5027619b" name="6.4k"/>
+		<part crc="fdaa44e6" name="4.4h"/>
+		<part crc="29bef91c" name="7.4l"/>
+		<part crc="c17c2458" name="5.4j"/>
+		<part crc="8ca25c37" name="8.4n"/>
+		<part crc="80df74ba" name="10.6n"/>
+		<part crc="239ec84e" name="9.5n"/>
 		<!-- Sub CPU ROMs 2x 4KB = 8KB (0x08000-0x09FFF) -->
 		<part crc="713478d8" name="e_f2.rom"/>
 		<part crc="e4535442" name="e_j2.rom"/>

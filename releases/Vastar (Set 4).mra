@@ -1,5 +1,5 @@
 <misterromdescription>
-	<n>Vastar</n>
+	<n>Vastar (Set 4)</n>
 	<region>World</region>
 	<homebrew>no</homebrew>
 	<bootleg>no</bootleg>
@@ -40,9 +40,9 @@
 	</switches>
 
 	<!-- Index 0: All CPU + GFX ROMs -->
-	<rom index="0" md5="none" zip="vastar.zip">
+	<rom index="0" md5="none" zip="vastar.zip|vastar4.zip">
 		<!-- Main CPU ROMs 8x 4KB = 32KB (0x00000-0x07FFF) -->
-		<part crc="45fa5075" name="e_f4.rom"/>
+		<part crc="d2b8f177" name="3.bin"/>
 		<part crc="84531982" name="e_k4.rom"/>
 		<part crc="94a4f778" name="e_h4.rom"/>
 		<part crc="40e4d57b" name="e_l4.rom"/>

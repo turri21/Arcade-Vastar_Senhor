@@ -42,10 +42,10 @@
 	<!-- Index 0: All CPU + GFX ROMs -->
 	<rom index="0" md5="none" zip="vastar.zip|pprobe.zip">
 		<!-- Main CPU ROMs 8x 4KB = 32KB (0x00000-0x07FFF) -->
-		<part crc="45fa5075" name="pb2.bin"/>
-		<part crc="84531982" name="pb3.bin"/>
-		<part crc="94a4f778" name="pb4.bin"/>
-		<part crc="40e4d57b" name="pb5.bin"/>
+		<part crc="a88592aa" name="pb2.bin"/>
+		<part crc="e4e20f74" name="pb3.bin"/>
+		<part crc="4e40e3fe" name="pb4.bin"/>
+		<part crc="b26ff0fd" name="pb5.bin"/>
 		<!-- Sub CPU ROMs 2x 4KB = 8KB (0x08000-0x09FFF) -->
 		<part crc="cd624df9" name="pb1.bin"/>
 		<!-- FG tiles 8KB (0x0A000-0x0BFFF) -->

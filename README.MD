@@ -39,9 +39,9 @@ Default MiSTer gamepad mapping:
 | D-Pad / Joystick | Move |
 | A | Fire |
 | B | Shield |
-| Right Shoulder | Insert Coin |
-| Select | 1 Player Start |
-| Start | 2 Player Start |
+| Select | Insert Coin |
+| Start | 1 Player Start |
+| Right Shoulder | 2 Player Start |
 | Left Shoulder | Pause |
 
 ---

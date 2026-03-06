@@ -38,6 +38,8 @@ module Vastar
 	// DIP switches (directly from MiSTer OSD)
 	input         [15:0] dip_sw,
 
+    input                rot_flip,
+
 	// Video outputs
 	output               video_hsync, video_vsync, video_csync,
 	output               video_hblank, video_vblank,
@@ -112,6 +114,9 @@ Vastar_CPU main_pcb
 	.sys_controls(sys_controls),
 
 	.dip_sw(dip_sw),
+
+    .rot_flip(rot_flip),
+
 	.sound(sound),
 
 	.h_center(h_center),

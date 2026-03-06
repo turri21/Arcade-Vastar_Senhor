@@ -22,6 +22,7 @@ module Vastar_CPU
 	input   [7:0] p2_controls,
 	input   [7:0] sys_controls,
 	input  [15:0] dip_sw,
+    input         rot_flip,
 	output signed [15:0] sound,
 	input   [3:0] h_center, v_center,
 	input         main_rom_cs_i, sub_rom_cs_i, fgtile_cs_i,
@@ -174,6 +175,7 @@ eprom_8k sub_rom (.CLK(clk_49m), .ADDR(cpu2_A[12:0]), .CLK_DL(clk_49m),
 wire [10:0] shared_addr_a = pause ? hs_address[10:0] : cpu1_A[10:0];
 wire shared_wr_a = pause ? hs_write : (cs_shared & ~cpu1_WR_n);
 wire [7:0] shared_din_a = pause ? hs_data_in : cpu1_Dout;
+wire [2:0] hs_bank = rot_flip ? 3'b011 : 3'b001;
 
 wire [7:0] bg1_vram_D, bg1_vram_rD;
 reg [11:0] bg1_raddr;
@@ -199,7 +201,8 @@ dpram_dc #(.widthad_a(12)) fg_vram (
 wire [7:0] shared_ram_D_cpu1, shared_ram_D_cpu2;
 dpram_dc #(.widthad_a(11)) shared_ram (
     .clock_a(clk_49m),
-    .address_a(hs_write ? {3'b001, hs_address[7:0]} : cpu1_A[10:0]),
+//    .address_a(hs_write ? {3'b001, hs_address[7:0]} : cpu1_A[10:0]),
+    .address_a(hs_write ? {hs_bank, hs_address[7:0]} : cpu1_A[10:0]),
     .data_a(hs_write ? hs_data_in : cpu1_Dout),
     .wren_a((cs_shared & ~cpu1_WR_n) | hs_write),
     .q_a(shared_ram_D_cpu1),
@@ -209,7 +212,8 @@ dpram_dc #(.widthad_a(11)) shared_ram (
 wire [7:0] hs_ram_q;
 dpram_dc #(.widthad_a(8)) hs_ram (
     .clock_a(clk_49m), .address_a(cpu1_A[7:0]),
-    .data_a(cpu1_Dout), .wren_a(cs_shared & ~cpu1_WR_n & (cpu1_A[10:8] == 3'b001)),
+//    .data_a(cpu1_Dout), .wren_a(cs_shared & ~cpu1_WR_n & (cpu1_A[10:8] == 3'b001)),
+    .data_a(cpu1_Dout), .wren_a(cs_shared & ~cpu1_WR_n & (cpu1_A[10:8] == hs_bank)),
     .q_a(),
     .clock_b(clk_49m), .address_b(hs_address[7:0]),
     .data_b(hs_data_in), .wren_b(hs_write),
@@ -327,8 +331,10 @@ reg [7:0] r_scroll;
 reg [2:0] r_layer; // 0=fg, 1=bg0, 2=bg1
 
 // Which line we're rendering into buffers (next visible line)
-wire [8:0] rnext = v_cnt + 9'd1;
-wire [7:0] rline = 8'd255 - rnext[7:0];
+wire [8:0] rnext     = v_cnt + 9'd1;
+//wire [7:0] rline = 8'd255 - rnext[7:0];
+wire [7:0] rline     = rot_flip ? ~rnext[7:0] : (8'd255 - rnext[7:0]);
+//wire [7:0] spr_rline = 8'd253 - rnext[7:0];  // never flips
 
 // Decode 2bpp pixel from byte pair
 function [1:0] pix2bpp;
@@ -376,7 +382,7 @@ always_ff @(posedge clk_49m) begin
 	end else if (rstate == S_IDLE) begin
 		wait_cycle <= 0;
 //		if (cen_5m && base_h_cnt == 9'd256 && v_cnt >= 9'd15 && v_cnt < 9'd239) begin
-		if (cen_5m && base_h_cnt == 9'd240 && v_cnt >= 9'd15 && v_cnt < 9'd239) begin
+		if (cen_5m && base_h_cnt == 9'd238 && v_cnt >= 9'd15 && v_cnt < 9'd239) begin
 			rx <= 0;
 			rstate <= S_FG_CODE;
 		    lb_page <= ~lb_page;			
@@ -803,6 +809,7 @@ always_ff @(posedge clk_49m) begin
 					sy = flip_screen ? spr_y : (spr_dbl ? (8'd224 - spr_y) : (8'd240 - spr_y));
 					sprite_height = spr_dbl ? 8'd32 : 8'd16;
 					local_y = {1'b0, rline} - {1'b0, sy};
+//					local_y = {1'b0, spr_rline} - {1'b0, sy};
 					if (local_y[8:0] < {1'b0, sprite_height}) begin
 						// Sprite is on this line — start pixel rendering
 						spr_row <= local_y[4:0];
@@ -866,7 +873,8 @@ always_ff @(posedge clk_49m) begin
 					reg [7:0] xpos;
 					bx = spr_flipx ? spr_col[1:0] : (3'd3 - spr_col[1:0]);
 					pval = {spr_byte_a[bx + 4], spr_byte_a[bx]};
-					xpos = spr_x + {4'd0, spr_col};
+//					xpos = spr_x + {4'd0, spr_col};
+					xpos = rot_flip ? ~(spr_x + {4'd0, spr_col}) : (spr_x + {4'd0, spr_col});
 					if (lb_page) begin
 						if (pval != 2'd0 && spr_lb_1[xpos] == 8'd0)
 							spr_lb_1[xpos] <= {spr_color, pval};
@@ -906,6 +914,7 @@ end
 
 //--- Display compositing ---
 wire [7:0] disp_x = 8'd255 - base_h_cnt[7:0];
+// wire [7:0] disp_x = rot_flip ? base_h_cnt[7:0] : (8'd255 - base_h_cnt[7:0]);
 wire [7:0] fg_pix  = lb_page ? fg_lb_0[disp_x]  : fg_lb_1[disp_x];
 wire [7:0] bg0_pix = lb_page ? bg0_lb_0[disp_x] : bg0_lb_1[disp_x];
 wire [7:0] bg1_pix = lb_page ? bg1_lb_0[disp_x] : bg1_lb_1[disp_x];

@@ -419,6 +419,15 @@ always @(posedge CLK_49M) begin
 		dip_sw[ioctl_addr[2:0]] <= ioctl_dout;
 end
 
+// Vastar or Planet Probe
+reg [7:0] core_config = 8'd0;
+always_ff @(posedge CLK_49M) begin
+    if (ioctl_wr && ioctl_index == 8'd1)
+        core_config <= ioctl_dout;
+end
+
+wire rot_flip = core_config[0];
+
 ///////////////                 Video                  ////////////////
 
 wire hblank, vblank;
@@ -443,7 +452,7 @@ wire [7:0] b = (b_out[0] ? 8'h19 : 8'h00) +
                (b_out[4] ? 8'h4D : 8'h00);
 wire ce_pix;
 
-wire rotate_ccw = 1;
+wire rotate_ccw = rot_flip ? 0 : 1;
 wire no_rotate = status[12] | direct_video;
 wire flip = ~no_rotate ^ status[11];
 wire video_rotated;
@@ -483,6 +492,8 @@ Vastar vastar_inst
 	.sys_controls(sys_controls),
 
 	.dip_sw({dip_sw[1], dip_sw[0]}),
+
+    .rot_flip(rot_flip),
 
 	.h_center(status[6:3]),
 	.v_center(status[10:7]),

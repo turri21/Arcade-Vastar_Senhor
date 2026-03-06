@@ -64,17 +64,21 @@
 		<!-- Unknown PROM 256B (0x14300-0x143FF) -->
 		<part crc="b5297a3b" name="mmi6301-1.bin"/>
 	</rom>
-	<rom index="1"></rom>
+	<rom index="1">
+	    <part>
+		01
+		</part>
+	</rom>
 	<rom index="2"></rom>
 	<rom index="3" md5="none">
 		<part>
 		00 00 FF FF 00 FF 00 02 00 02 00 01 11 11 00 00
-		00 00 F1 27 00 86 00 16
+		00 00 F3 80 00 45 00 15
 		</part>
 	</rom>
 	<rom index="4"></rom>
-	<nvram index="4" size="134"></nvram>
+	<nvram index="4" size="69"></nvram>
 
-	<remark></remark>
+	<remark>F380-F3C4</remark>
 	<mratimestamp>20260224000000</mratimestamp>
 </misterromdescription>

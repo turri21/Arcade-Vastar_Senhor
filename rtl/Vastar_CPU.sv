@@ -41,17 +41,18 @@ module Vastar_CPU
 
 //------------------------------------------------------- Clock enables -------------------------------------------------------//
 
+// Pixel clock: 49.152 MHz * 3/32 = 4.608 MHz exactly (= 18.432 XTAL / 4)
 wire [1:0] pix_cen_o;
-jtframe_frac_cen #(2) pix_cen (.clk(clk_49m), .n(10'd89), .m(10'd875), .cen(pix_cen_o), .cenb());
-wire cen_5m = pix_cen_o[0];
-assign ce_pix = cen_5m;
+jtframe_frac_cen #(2) pix_cen (.clk(clk_49m), .n(10'd3), .m(10'd32), .cen(pix_cen_o), .cenb());
+wire cen_pix = pix_cen_o[0];
+assign ce_pix = cen_pix;
 
 reg [3:0] cpu_div = 4'd0;
 always_ff @(posedge clk_49m) cpu_div <= cpu_div + 4'd1;
 wire cen_cpu = (cpu_div == 4'd0);
 
 reg ay_toggle = 1'b0;
-always_ff @(posedge clk_49m) if (cen_cpu) ay_toggle <= ~ay_toggle;
+always_ff @(posedge clk_49m) if (cen_cpu) ay_toggle <= ~ay_toggle;  // Verify cen_cpu for AY toggle
 wire cen_ay = cen_cpu & ~ay_toggle & ~pause;
 
 //-------------------------------------------------------- Video timing --------------------------------------------------------//
@@ -59,8 +60,8 @@ wire cen_ay = cen_cpu & ~ay_toggle & ~pause;
 reg [8:0] base_h_cnt = 9'd0;
 reg [8:0] v_cnt = 9'd0;
 always_ff @(posedge clk_49m) begin
-	if (cen_5m) begin
-		if (base_h_cnt == 9'd319) begin
+	if (cen_pix) begin
+		if (base_h_cnt == 9'd287) begin
 			base_h_cnt <= 9'd0;
 			v_cnt <= (v_cnt == 9'd263) ? 9'd0 : v_cnt + 9'd1;
 		end else
@@ -73,8 +74,8 @@ wire vblk = (v_cnt < 9'd17) | (v_cnt >= 9'd241);
 assign video_hblank = hblk;
 assign video_vblank = vblk;
 
-wire [8:0] hs_start = 9'd280 + {5'd0, h_center};
-wire [8:0] hs_end   = hs_start + 9'd32;
+wire [8:0] hs_start = 9'd264 + {5'd0, h_center};
+wire [8:0] hs_end   = hs_start + 9'd16;
 wire [8:0] vs_start = 9'd248 + {5'd0, v_center};
 wire [8:0] vs_end   = vs_start + 9'd4;
 assign video_hsync = (base_h_cnt >= hs_start && base_h_cnt < hs_end);
@@ -381,8 +382,8 @@ always_ff @(posedge clk_49m) begin
 		wait_cycle <= 0;
 	end else if (rstate == S_IDLE) begin
 		wait_cycle <= 0;
-//		if (cen_5m && base_h_cnt == 9'd256 && v_cnt >= 9'd15 && v_cnt < 9'd239) begin
-		if (cen_5m && base_h_cnt == 9'd238 && v_cnt >= 9'd15 && v_cnt < 9'd239) begin
+//		if (cen_pix && base_h_cnt == 9'd256 && v_cnt >= 9'd15 && v_cnt < 9'd239) begin
+		if (cen_pix && base_h_cnt == 9'd238 && v_cnt >= 9'd15 && v_cnt < 9'd239) begin
 			rx <= 0;
 			rstate <= S_FG_CODE;
 		    lb_page <= ~lb_page;			

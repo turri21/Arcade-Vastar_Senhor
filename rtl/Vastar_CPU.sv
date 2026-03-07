@@ -202,7 +202,6 @@ dpram_dc #(.widthad_a(12)) fg_vram (
 wire [7:0] shared_ram_D_cpu1, shared_ram_D_cpu2;
 dpram_dc #(.widthad_a(11)) shared_ram (
     .clock_a(clk_49m),
-//    .address_a(hs_write ? {3'b001, hs_address[7:0]} : cpu1_A[10:0]),
     .address_a(hs_write ? {hs_bank, hs_address[7:0]} : cpu1_A[10:0]),
     .data_a(hs_write ? hs_data_in : cpu1_Dout),
     .wren_a((cs_shared & ~cpu1_WR_n) | hs_write),
@@ -213,7 +212,6 @@ dpram_dc #(.widthad_a(11)) shared_ram (
 wire [7:0] hs_ram_q;
 dpram_dc #(.widthad_a(8)) hs_ram (
     .clock_a(clk_49m), .address_a(cpu1_A[7:0]),
-//    .data_a(cpu1_Dout), .wren_a(cs_shared & ~cpu1_WR_n & (cpu1_A[10:8] == 3'b001)),
     .data_a(cpu1_Dout), .wren_a(cs_shared & ~cpu1_WR_n & (cpu1_A[10:8] == hs_bank)),
     .q_a(),
     .clock_b(clk_49m), .address_b(hs_address[7:0]),
@@ -333,9 +331,7 @@ reg [2:0] r_layer; // 0=fg, 1=bg0, 2=bg1
 
 // Which line we're rendering into buffers (next visible line)
 wire [8:0] rnext     = v_cnt + 9'd1;
-//wire [7:0] rline = 8'd255 - rnext[7:0];
 wire [7:0] rline     = rot_flip ? ~rnext[7:0] : (8'd255 - rnext[7:0]);
-//wire [7:0] spr_rline = 8'd253 - rnext[7:0];  // never flips
 
 // Decode 2bpp pixel from byte pair
 function [1:0] pix2bpp;
@@ -382,8 +378,8 @@ always_ff @(posedge clk_49m) begin
 		wait_cycle <= 0;
 	end else if (rstate == S_IDLE) begin
 		wait_cycle <= 0;
-//		if (cen_pix && base_h_cnt == 9'd256 && v_cnt >= 9'd15 && v_cnt < 9'd239) begin
-		if (cen_pix && base_h_cnt == 9'd238 && v_cnt >= 9'd15 && v_cnt < 9'd239) begin
+//		if (cen_pix && base_h_cnt == 9'd256 && v_cnt >= 9'd15 && v_cnt < 9'd240) begin
+		if (cen_pix && base_h_cnt == 9'd240 && v_cnt >= 9'd15 && v_cnt < 9'd241) begin
 			rx <= 0;
 			rstate <= S_FG_CODE;
 		    lb_page <= ~lb_page;			
@@ -873,6 +869,7 @@ always_ff @(posedge clk_49m) begin
 					reg [2:0] bx;
 					reg [7:0] xpos;
 					bx = spr_flipx ? spr_col[1:0] : (3'd3 - spr_col[1:0]);
+//					bx = (spr_flipx ^ rot_flip) ? spr_col[1:0] : (3'd3 - spr_col[1:0]);
 					pval = {spr_byte_a[bx + 4], spr_byte_a[bx]};
 //					xpos = spr_x + {4'd0, spr_col};
 					xpos = rot_flip ? ~(spr_x + {4'd0, spr_col}) : (spr_x + {4'd0, spr_col});

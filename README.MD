@@ -1,3 +1,12 @@
+-=(MCR1_Senhor notes)=-
+
+Tested: Working Video 720p, 1080p & Sound.
+
+Dev notes: Core is split in two cores because Planet Probe has corrupted graphics after Commit 0d909b5 so we're using Commit f1cf71f instead for it.
+
+Planet Probe.mra also edited to point to PlanetProbe_Senhor_20260320.rbf
+
+___
 <p align="center">
   <img src="Useful Information/Vastar.png" width="800">
 </p>
